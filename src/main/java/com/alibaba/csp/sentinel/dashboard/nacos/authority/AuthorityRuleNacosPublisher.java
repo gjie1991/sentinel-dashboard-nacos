@@ -15,16 +15,17 @@
  */
 package com.alibaba.csp.sentinel.dashboard.nacos.authority;
 
+import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.AuthorityRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.DegradeRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.nacos.NacosConfigUtil;
 import com.alibaba.csp.sentinel.dashboard.nacos.RuleNacosPublisher;
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuthorityRuleNacosPublisher extends RuleNacosPublisher<DegradeRuleEntity> {
+public class AuthorityRuleNacosPublisher extends RuleNacosPublisher<AuthorityRuleEntity> {
 
     @Override
     public String getDataIdPostfix() {
-        return NacosConfigUtil.DEGRADE_DATA_ID_POSTFIX;
+        return NacosConfigUtil.AUTHORITY_DATA_ID_POSTFIX;
     }
 }

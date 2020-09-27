@@ -22,6 +22,10 @@ import com.alibaba.csp.sentinel.dashboard.auth.AuthAction;
 import com.alibaba.csp.sentinel.dashboard.client.SentinelApiClient;
 import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
 import com.alibaba.csp.sentinel.dashboard.auth.AuthService.PrivilegeType;
+import com.alibaba.csp.sentinel.dashboard.nacos.authority.AuthorityRuleNacosProvider;
+import com.alibaba.csp.sentinel.dashboard.nacos.authority.AuthorityRuleNacosPublisher;
+import com.alibaba.csp.sentinel.dashboard.nacos.degrade.DegradeRuleNacosProvider;
+import com.alibaba.csp.sentinel.dashboard.nacos.degrade.DegradeRuleNacosPublisher;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.util.StringUtil;
 
@@ -53,7 +57,10 @@ public class AuthorityRuleController {
     private final Logger logger = LoggerFactory.getLogger(AuthorityRuleController.class);
 
     @Autowired
-    private SentinelApiClient sentinelApiClient;
+    private AuthorityRuleNacosProvider ruleProvider;
+    @Autowired
+    private AuthorityRuleNacosPublisher rulePublisher;
+
     @Autowired
     private RuleRepository<AuthorityRuleEntity, Long> repository;
 
@@ -72,8 +79,7 @@ public class AuthorityRuleController {
             return Result.ofFail(-1, "Invalid parameter: port");
         }
         try {
-            List<AuthorityRuleEntity> rules = sentinelApiClient.fetchAuthorityRulesOfMachine(app, ip, port);
-            rules = repository.saveAll(rules);
+            List<AuthorityRuleEntity> rules = ruleProvider.getRules(app);
             return Result.ofSuccess(rules);
         } catch (Throwable throwable) {
             logger.error("Error when querying authority rules", throwable);
@@ -186,6 +192,11 @@ public class AuthorityRuleController {
 
     private boolean publishRules(String app, String ip, Integer port) {
         List<AuthorityRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));
-        return sentinelApiClient.setAuthorityRuleOfMachine(app, ip, port, rules);
+        try {
+            rulePublisher.publish(app, rules);
+            return Boolean.TRUE;
+        }catch (Exception e){
+            return Boolean.FALSE;
+        }
     }
 }
