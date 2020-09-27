@@ -21,7 +21,7 @@ import com.alibaba.csp.sentinel.dashboard.nacos.RuleNacosPublisher;
 import org.springframework.stereotype.Component;
 
 
-@Component("paramFlowFlowRuleNacosPublisher")
+@Component
 public class ParamFlowFlowRuleNacosPublisher extends RuleNacosPublisher<ParamFlowRuleEntity> {
 
     @Override

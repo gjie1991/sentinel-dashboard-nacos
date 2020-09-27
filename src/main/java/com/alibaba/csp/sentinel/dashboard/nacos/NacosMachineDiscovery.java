@@ -103,7 +103,10 @@ public class NacosMachineDiscovery implements MachineDiscovery {
         AssertUtil.assertNotBlank(app, "app name cannot be blank");
         AppInfo appInfo = getAppInfo(app);
         if (appInfo != null) {
-            return appInfo.removeMachine(ip, port);
+            if (appInfo.removeMachine(ip, port)) {
+                setAppInfo(appInfo);
+                return Boolean.TRUE;
+            }
         }
         return false;
     }

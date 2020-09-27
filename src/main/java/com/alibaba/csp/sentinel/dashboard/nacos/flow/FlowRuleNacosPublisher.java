@@ -30,7 +30,7 @@ import java.util.List;
  * @author Eric Zhao
  * @since 1.4.0
  */
-@Component("flowRuleNacosPublisher")
+@Component
 public class FlowRuleNacosPublisher implements DynamicRulePublisher<List<FlowRuleEntity>> {
 
     @Autowired

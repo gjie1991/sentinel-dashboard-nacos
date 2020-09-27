@@ -31,7 +31,7 @@ import java.util.List;
  * @author Eric Zhao
  * @since 1.4.0
  */
-@Component("flowRuleNacosProvider")
+@Component
 public class FlowRuleNacosProvider implements DynamicRuleProvider<List<FlowRuleEntity>> {
 
     @Autowired

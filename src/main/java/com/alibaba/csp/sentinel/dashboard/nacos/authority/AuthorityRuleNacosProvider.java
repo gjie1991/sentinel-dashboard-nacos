@@ -21,7 +21,7 @@ import com.alibaba.csp.sentinel.dashboard.nacos.RuleNacosProvider;
 import org.springframework.stereotype.Component;
 
 
-@Component("degradeRuleNacosProvider")
+@Component
 public class AuthorityRuleNacosProvider extends RuleNacosProvider<DegradeRuleEntity>{
 
     @Override
