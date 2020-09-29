@@ -27,6 +27,6 @@ public class SystemRuleNacosProvider extends RuleNacosProvider<SystemRuleEntity>
 
     @Override
     public String getDataIdPostfix() {
-        return NacosConfigUtil.DEGRADE_DATA_ID_POSTFIX;
+        return NacosConfigUtil.SYSTEM_DATA_ID_POSTFIX;
     }
 }
