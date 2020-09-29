@@ -82,6 +82,7 @@ public class SystemController {
         }
         try {
             List<SystemRuleEntity> rules = ruleProvider.getRules(app);
+            repository.saveAll(rules);
             return Result.ofSuccess(rules);
         } catch (Throwable throwable) {
             logger.error("Query machine system rules error", throwable);
@@ -103,8 +104,9 @@ public class SystemController {
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<SystemRuleEntity> apiAdd(String app, String ip, Integer port,
                                            Double highestSystemLoad, Double highestCpuUsage, Long avgRt,
-                                           Long maxThread, Double qps) {
-
+                                           Long maxThread, Double qps) throws Exception {
+        List<SystemRuleEntity> rules = ruleProvider.getRules(app);
+        repository.saveAll(rules);
         Result<SystemRuleEntity> checkResult = checkBasicParams(app, ip, port);
         if (checkResult != null) {
             return checkResult;
@@ -113,7 +115,7 @@ public class SystemController {
         int notNullCount = countNotNullAndNotNegative(highestSystemLoad, avgRt, maxThread, qps, highestCpuUsage);
         if (notNullCount != 1) {
             return Result.ofFail(-1, "only one of [highestSystemLoad, avgRt, maxThread, qps,highestCpuUsage] "
-                + "value must be set > 0, but " + notNullCount + " values get");
+                    + "value must be set > 0, but " + notNullCount + " values get");
         }
         if (null != highestCpuUsage && highestCpuUsage > 1) {
             return Result.ofFail(-1, "highestCpuUsage must between [0.0, 1.0]");
@@ -168,7 +170,7 @@ public class SystemController {
     @GetMapping("/save.json")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<SystemRuleEntity> apiUpdateIfNotNull(Long id, String app, Double highestSystemLoad,
-            Double highestCpuUsage, Long avgRt, Long maxThread, Double qps) {
+                                                       Double highestCpuUsage, Long avgRt, Long maxThread, Double qps) {
         if (id == null) {
             return Result.ofFail(-1, "id can't be null");
         }
@@ -229,7 +231,9 @@ public class SystemController {
 
     @RequestMapping("/delete.json")
     @AuthAction(PrivilegeType.DELETE_RULE)
-    public Result<?> delete(Long id) {
+    public Result<?> delete(Long id, String app) throws Exception {
+        List<SystemRuleEntity> rules = ruleProvider.getRules(app);
+        repository.saveAll(rules);
         if (id == null) {
             return Result.ofFail(-1, "id can't be null");
         }
@@ -254,7 +258,7 @@ public class SystemController {
         try {
             rulePublisher.publish(app, rules);
             return Boolean.TRUE;
-        }catch (Exception e){
+        } catch (Exception e) {
             return Boolean.FALSE;
         }
     }

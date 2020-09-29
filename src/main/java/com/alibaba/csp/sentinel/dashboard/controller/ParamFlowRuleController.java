@@ -67,8 +67,6 @@ public class ParamFlowRuleController {
     private final Logger logger = LoggerFactory.getLogger(ParamFlowRuleController.class);
 
     @Autowired
-    private SentinelApiClient sentinelApiClient;
-    @Autowired
     private AppManagement appManagement;
 
     @Autowired
@@ -77,10 +75,10 @@ public class ParamFlowRuleController {
     private boolean checkIfSupported(String app, String ip, int port) {
         try {
             return Optional.ofNullable(appManagement.getDetailApp(app))
-                .flatMap(e -> e.getMachine(ip, port))
-                .flatMap(m -> VersionUtils.parseVersion(m.getVersion())
-                    .map(v -> v.greaterOrEqual(version020)))
-                .orElse(true);
+                    .flatMap(e -> e.getMachine(ip, port))
+                    .flatMap(m -> VersionUtils.parseVersion(m.getVersion())
+                            .map(v -> v.greaterOrEqual(version020)))
+                    .orElse(true);
             // If error occurred or cannot retrieve machine info, return true.
         } catch (Exception ex) {
             return true;
@@ -106,6 +104,7 @@ public class ParamFlowRuleController {
         }
         try {
             List<ParamFlowRuleEntity> rules = ruleProvider.getRules(app);
+            repository.saveAll(rules);
             return Result.ofSuccess(rules);
         } catch (ExecutionException ex) {
             logger.error("Error when querying parameter flow rules", ex.getCause());
@@ -237,7 +236,9 @@ public class ParamFlowRuleController {
 
     @DeleteMapping("/rule/{id}")
     @AuthAction(PrivilegeType.DELETE_RULE)
-    public Result<Long> apiDeleteRule(@PathVariable("id") Long id) {
+    public Result<Long> apiDeleteRule(@PathVariable("id") Long id, String app) throws Exception {
+        List<ParamFlowRuleEntity> rules = ruleProvider.getRules(app);
+        repository.saveAll(rules);
         if (id == null) {
             return Result.ofFail(-1, "id cannot be null");
         }
@@ -265,20 +266,17 @@ public class ParamFlowRuleController {
 
     private CompletableFuture<Void> publishRules(String app, String ip, Integer port) {
         List<ParamFlowRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));
-        //return sentinelApiClient.setParamFlowRuleOfMachine(app, ip, port, rules);
-
         try {
             rulePublisher.publish(app, rules);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("publish rule fail", e);
         }
-
         return CompletableFuture.completedFuture(null);
     }
 
     private <R> Result<R> unsupportedVersion() {
         return Result.ofFail(4041,
-            "Sentinel client not supported for parameter flow control (unsupported version or dependency absent)");
+                "Sentinel client not supported for parameter flow control (unsupported version or dependency absent)");
     }
 
     private final SentinelVersion version020 = new SentinelVersion().setMinorVersion(2);

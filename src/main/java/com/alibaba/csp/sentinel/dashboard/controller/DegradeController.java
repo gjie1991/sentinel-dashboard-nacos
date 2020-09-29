@@ -79,7 +79,6 @@ public class DegradeController {
             return Result.ofFail(-1, "port can't be null");
         }
         try {
-            //List<DegradeRuleEntity> rules = sentinelApiClient.fetchDegradeRuleOfMachine(app, ip, port);
             List<DegradeRuleEntity> rules = ruleProvider.getRules(app);
             rules = repository.saveAll(rules);
             return Result.ofSuccess(rules);
@@ -114,7 +113,9 @@ public class DegradeController {
     @PutMapping("/rule/{id}")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<DegradeRuleEntity> apiUpdateRule(@PathVariable("id") Long id,
-                                                     @RequestBody DegradeRuleEntity entity) {
+                                                   @RequestBody DegradeRuleEntity entity) throws Exception {
+        List<DegradeRuleEntity> rules = ruleProvider.getRules(entity.getApp());
+        repository.saveAll(rules);
         if (id == null || id <= 0) {
             return Result.ofFail(-1, "id can't be null or negative");
         }
@@ -147,7 +148,9 @@ public class DegradeController {
 
     @DeleteMapping("/rule/{id}")
     @AuthAction(PrivilegeType.DELETE_RULE)
-    public Result<Long> delete(@PathVariable("id") Long id) {
+    public Result<Long> delete(@PathVariable("id") Long id, String app) throws Exception {
+        List<DegradeRuleEntity> rules = ruleProvider.getRules(app);
+        repository.saveAll(rules);
         if (id == null) {
             return Result.ofFail(-1, "id can't be null");
         }
@@ -169,17 +172,15 @@ public class DegradeController {
         return Result.ofSuccess(id);
     }
 
-    private boolean publishRules(String app, String ip, Integer port)  {
+    private boolean publishRules(String app, String ip, Integer port) {
         List<DegradeRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));
         try {
             rulePublisher.publish(app, rules);
             return Boolean.TRUE;
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error("publish rule fail", e);
             return Boolean.FALSE;
         }
-
-        //return sentinelApiClient.setDegradeRuleOfMachine(app, ip, port, rules);
     }
 
     private <R> Result<R> checkEntityInternal(DegradeRuleEntity entity) {
@@ -211,10 +212,10 @@ public class DegradeController {
             return Result.ofFail(-1, "circuit breaker strategy cannot be null");
         }
         if (strategy < CircuitBreakerStrategy.SLOW_REQUEST_RATIO.getType()
-            || strategy > RuleConstant.DEGRADE_GRADE_EXCEPTION_COUNT) {
+                || strategy > RuleConstant.DEGRADE_GRADE_EXCEPTION_COUNT) {
             return Result.ofFail(-1, "Invalid circuit breaker strategy: " + strategy);
         }
-        if (entity.getMinRequestAmount()  == null || entity.getMinRequestAmount() <= 0) {
+        if (entity.getMinRequestAmount() == null || entity.getMinRequestAmount() <= 0) {
             return Result.ofFail(-1, "Invalid minRequestAmount");
         }
         if (entity.getStatIntervalMs() == null || entity.getStatIntervalMs() <= 0) {

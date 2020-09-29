@@ -18,8 +18,6 @@ public abstract class RuleNacosProvider<T extends RuleEntity>  implements Dynami
 
     @Override
     public List<T> getRules(String appName) throws Exception {
-        /*String rules = configService.getConfig(appName + getDataIdPostfix(),
-                NacosConfigUtil.GROUP_ID, 3000);*/
         String rules = configService.getConfig(appName + getDataIdPostfix(),
                 appName, 3000);
         if (StringUtil.isEmpty(rules)) {

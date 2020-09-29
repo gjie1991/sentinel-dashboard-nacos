@@ -80,6 +80,7 @@ public class AuthorityRuleController {
         }
         try {
             List<AuthorityRuleEntity> rules = ruleProvider.getRules(app);
+            repository.saveAll(rules);
             return Result.ofSuccess(rules);
         } catch (Throwable throwable) {
             logger.error("Error when querying authority rules", throwable);
@@ -142,7 +143,9 @@ public class AuthorityRuleController {
     @PutMapping("/rule/{id}")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<AuthorityRuleEntity> apiUpdateParamFlowRule(@PathVariable("id") Long id,
-                                                              @RequestBody AuthorityRuleEntity entity) {
+                                                              @RequestBody AuthorityRuleEntity entity) throws Exception {
+        List<AuthorityRuleEntity> rules = ruleProvider.getRules(entity.getApp());
+        repository.saveAll(rules);
         if (id == null || id <= 0) {
             return Result.ofFail(-1, "Invalid id");
         }
@@ -171,7 +174,9 @@ public class AuthorityRuleController {
 
     @DeleteMapping("/rule/{id}")
     @AuthAction(PrivilegeType.DELETE_RULE)
-    public Result<Long> apiDeleteRule(@PathVariable("id") Long id) {
+    public Result<Long> apiDeleteRule(@PathVariable("id") Long id, String app) throws Exception {
+        List<AuthorityRuleEntity> rules = ruleProvider.getRules(app);
+        repository.saveAll(rules);
         if (id == null) {
             return Result.ofFail(-1, "id cannot be null");
         }
